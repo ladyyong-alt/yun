@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Sparkles, Search, Compass, BookOpen, FlaskConical, Users, Menu, X, PlusCircle, ArrowRight } from 'lucide-react';
 
-export default function Navbar({ onSearchChange, searchQuery, onCategorySelect, activeCategory }) {
+export default function Navbar({ onSearchChange, searchQuery, onCategorySelect, activeCategory, onOpenHighSchoolLab }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('explore');
 
@@ -52,7 +52,22 @@ export default function Navbar({ onSearchChange, searchQuery, onCategorySelect, 
             return (
               <button
                 key={link.id}
-                onClick={() => setActiveTab(link.id)}
+                onClick={() => {
+                  setActiveTab(link.id);
+                  if (link.id === 'curriculum') {
+                    onCategorySelect('high-school');
+                    const el = document.getElementById('simulation-grid-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  } else if (link.id === 'lab') {
+                    if (onOpenHighSchoolLab) onOpenHighSchoolLab();
+                  } else if (link.id === 'explore') {
+                    onCategorySelect('all');
+                    const el = document.getElementById('simulation-grid-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  } else if (link.id === 'community') {
+                    alert('📚 고등학교 수능·내신 탐구 보고서 및 세특(세부능력특기사항) 수학 시뮬레이션 공유 커뮤니티입니다!');
+                  }
+                }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 ${
                   isActive
                     ? 'clay-pill-active text-white'

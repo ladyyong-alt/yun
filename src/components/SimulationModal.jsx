@@ -4,6 +4,10 @@ import UnitCircleSim from './simulations/UnitCircleSim';
 import MonteCarloSim from './simulations/MonteCarloSim';
 import FractalTreeSim from './simulations/FractalTreeSim';
 import GaltonBoardSim from './simulations/GaltonBoardSim';
+import CalculusDerivativeSim from './simulations/CalculusDerivativeSim';
+import RiemannSumSim from './simulations/RiemannSumSim';
+import ConicSectionSim from './simulations/ConicSectionSim';
+import GeoGebraEmbedSim from './simulations/GeoGebraEmbedSim';
 import confetti from 'canvas-confetti';
 
 export default function SimulationModal({ sim, onClose }) {
@@ -73,11 +77,15 @@ export default function SimulationModal({ sim, onClose }) {
 
         {/* Simulation Sandbox Area */}
         <div className="my-5 w-full">
+          {sim.interactiveType === 'geogebra-lab' && <GeoGebraEmbedSim />}
+          {sim.interactiveType === 'calculus-derivative' && <CalculusDerivativeSim />}
+          {sim.interactiveType === 'riemann-sum' && <RiemannSumSim />}
+          {sim.interactiveType === 'conic-sections' && <ConicSectionSim />}
           {sim.interactiveType === 'unit-circle' && <UnitCircleSim isCompact={false} />}
           {sim.interactiveType === 'monte-carlo' && <MonteCarloSim />}
           {sim.interactiveType === 'fractal-tree' && <FractalTreeSim />}
           {sim.interactiveType === 'galton-board' && <GaltonBoardSim />}
-          {!['unit-circle', 'monte-carlo', 'fractal-tree', 'galton-board'].includes(sim.interactiveType) && (
+          {!['geogebra-lab', 'calculus-derivative', 'riemann-sum', 'conic-sections', 'unit-circle', 'monte-carlo', 'fractal-tree', 'galton-board'].includes(sim.interactiveType) && (
             <div className="clay-inset p-8 text-center rounded-2xl flex flex-col items-center justify-center gap-4 bg-slate-50">
               <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-clay-purple text-2xl font-serif font-extrabold shadow-sm">
                 ∫

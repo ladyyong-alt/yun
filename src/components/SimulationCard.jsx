@@ -53,6 +53,54 @@ export default function SimulationCard({ sim, onOpenModal }) {
 
         {/* Decorative Math Icon / Abstract Vector Representation */}
         <div className="flex items-center justify-center my-auto">
+          {sim.interactiveType === 'geogebra-lab' && (
+            <div className="flex items-center gap-2 text-clay-purple">
+              <div className="w-11 h-11 rounded-2xl bg-white shadow-md flex items-center justify-center text-xl font-extrabold text-clay-purple border border-purple-200">
+                ∿
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-xs font-bold text-clay-purple">GeoGebra + Desmos</span>
+                <span className="text-[10px] text-clay-slate-500 font-mono">3D & Graphing Lab</span>
+              </div>
+            </div>
+          )}
+
+          {sim.interactiveType === 'calculus-derivative' && (
+            <div className="flex items-center gap-2 text-rose-500">
+              <div className="w-11 h-11 rounded-2xl bg-white shadow-md flex items-center justify-center text-base font-serif font-extrabold text-rose-500 border border-rose-200">
+                dy/dx
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-xs font-extrabold text-rose-600">접선 f'(a)</span>
+                <span className="text-[10px] text-clay-slate-500 font-mono">Δx ➔ 0 극한</span>
+              </div>
+            </div>
+          )}
+
+          {sim.interactiveType === 'riemann-sum' && (
+            <div className="flex items-center gap-2 text-teal-600">
+              <div className="w-11 h-11 rounded-2xl bg-white shadow-md flex items-center justify-center text-lg font-serif font-extrabold text-teal-600 border border-teal-200">
+                ∫ f
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-xs font-extrabold text-teal-700">구분구적법 S_n</span>
+                <span className="text-[10px] text-clay-slate-500 font-mono">n ➔ ∞ 정적분</span>
+              </div>
+            </div>
+          )}
+
+          {sim.interactiveType === 'conic-sections' && (
+            <div className="flex items-center gap-2 text-amber-600">
+              <div className="w-11 h-11 rounded-2xl bg-white shadow-md flex items-center justify-center text-lg font-extrabold text-amber-600 border border-amber-200">
+                ⬭
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-xs font-extrabold text-amber-700">타원·포물선·쌍곡선</span>
+                <span className="text-[10px] text-clay-slate-500 font-mono">초점과 거리의 합</span>
+              </div>
+            </div>
+          )}
+
           {sim.interactiveType === 'unit-circle' && (
             <div className="flex items-center gap-2 text-clay-purple">
               <div className="w-12 h-12 rounded-full border-2 border-clay-purple border-dashed animate-spin-slow flex items-center justify-center text-lg font-bold">

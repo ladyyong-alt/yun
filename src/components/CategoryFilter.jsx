@@ -1,10 +1,11 @@
 import React from 'react';
 import { CATEGORIES } from '../data/simulationsData';
-import { Sparkles, Activity, Shapes, Dice5, Compass, Binary, Search, X, SlidersHorizontal } from 'lucide-react';
+import { Sparkles, Activity, Shapes, Dice5, Compass, Binary, Search, X, SlidersHorizontal, GraduationCap } from 'lucide-react';
 
 // Icon mapper helper
 const iconMap = {
   Sparkles,
+  GraduationCap,
   Activity,
   Shapes,
   Dice5,

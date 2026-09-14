@@ -61,6 +61,10 @@ export default function App() {
         searchQuery={searchQuery}
         onCategorySelect={setSelectedCategory}
         activeCategory={selectedCategory}
+        onOpenHighSchoolLab={() => {
+          const sim = SIMULATIONS.find((s) => s.id === 'geogebra-lab');
+          if (sim) setActiveSimulation(sim);
+        }}
       />
 
       {/* 2. 메인 페이지 본문 */}
@@ -68,10 +72,65 @@ export default function App() {
         {/* 히어로 섹션 (실시간 단위원 & 파동 시뮬레이터 포함) */}
         <HeroSection onExploreClick={handleExploreClick} />
 
+        {/* 고등학생 전용 인터랙티브 앱 하이라이트 배너 */}
+        <section className="px-4 sm:px-8 max-w-7xl mx-auto w-full pt-2 pb-4">
+          <div className="clay-card p-5 sm:p-6 bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-teal-500/10 border border-purple-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-clay-purple text-white shadow-sm">
+                  🎓 고등학생 추천
+                </span>
+                <span className="text-xs font-bold text-clay-slate-600">
+                  수학 I · 수학 II · 기하 · 미적분 수능/내신 연계
+                </span>
+              </div>
+              <h2 className="text-base sm:text-lg font-extrabold text-clay-slate-900 mt-0.5">
+                고교 수학 인터랙티브 랩 & GeoGebra 계산기
+              </h2>
+              <p className="text-xs text-clay-slate-500">
+                미분계수 접선 수렴, 구분구적법 정적분 오차, 이차곡선 초점 궤적을 직접 조작해보세요.
+              </p>
+            </div>
+
+            {/* 원클릭 바로 실행 버튼들 */}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => {
+                  const sim = SIMULATIONS.find((s) => s.id === 'geogebra-lab');
+                  if (sim) setActiveSimulation(sim);
+                }}
+                className="clay-btn-primary px-3.5 py-2 text-xs font-bold rounded-full flex items-center gap-1.5 shadow-sm"
+              >
+                <span>GeoGebra / Desmos</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  const sim = SIMULATIONS.find((s) => s.id === 'calculus-derivative');
+                  if (sim) setActiveSimulation(sim);
+                }}
+                className="clay-btn-peach px-3.5 py-2 text-xs font-bold rounded-full flex items-center gap-1.5 shadow-sm text-white"
+              >
+                <span>미분계수 & 접선</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  const sim = SIMULATIONS.find((s) => s.id === 'riemann-sum');
+                  if (sim) setActiveSimulation(sim);
+                }}
+                className="clay-btn-teal px-3.5 py-2 text-xs font-bold rounded-full flex items-center gap-1.5 shadow-sm text-white"
+              >
+                <span>구분구적법 & 정적분</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
         {/* 시뮬레이션 카탈로그 섹션 */}
         <section
           id="simulation-grid-section"
-          className="px-4 sm:px-8 max-w-7xl mx-auto w-full pt-6 scroll-mt-24"
+          className="px-4 sm:px-8 max-w-7xl mx-auto w-full pt-4 scroll-mt-24"
         >
           {/* 카테고리 필터 & 검색 결과 컨트롤러 */}
           <CategoryFilter
