@@ -3,8 +3,74 @@ import {
   Users, Sparkles, Heart, Download, RefreshCw, Trash2, Search, 
   SlidersHorizontal, Play, MessageSquare, Cloud, HardDrive, Calendar, ArrowUpRight 
 } from 'lucide-react';
-import { getFractals, likeFractalInDb, deleteFractalFromDb, isSupabaseConfigured } from '../lib/supabase';
+import { 
+  getFractals, likeFractalInDb, deleteFractalFromDb, 
+  isSupabaseConfigured, supabase, TABLE_NAME 
+} from '../lib/supabase';
 import confetti from 'canvas-confetti';
+
+// 썸네일 이미지가 없거나 경량 렌더링 시 사용할 실시간 미니 프랙탈 캔버스
+function MiniFractalCanvas({ angle = 30, depth = 8, branchRatio = 0.7, colorTheme = 'summer' }) {
+  const canvasRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+
+    ctx.clearRect(0, 0, width, height);
+
+    const leafColors = {
+      summer: '#00CEC9',
+      sakura: '#FF7675',
+      autumn: '#FDCB6E',
+      frost: '#74B9FF',
+    };
+    const leafColor = leafColors[colorTheme] || leafColors.summer;
+
+    const drawBranch = (x, y, length, currentAngle, currentDepth) => {
+      if (currentDepth <= 0) return;
+      const endX = x + length * Math.sin(currentAngle);
+      const endY = y - length * Math.cos(currentAngle);
+
+      ctx.lineWidth = Math.max(1, currentDepth * 0.75);
+      if (currentDepth > 2) {
+        ctx.strokeStyle = '#5c4880';
+      } else {
+        ctx.strokeStyle = leafColor;
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+
+      const rad = (Number(angle) * Math.PI) / 180;
+      const nextRatio = Math.min(0.78, Math.max(0.55, Number(branchRatio) || 0.7));
+      const nextDepth = currentDepth - 1;
+      drawBranch(endX, endY, length * nextRatio, currentAngle - rad, nextDepth);
+      drawBranch(endX, endY, length * nextRatio, currentAngle + rad, nextDepth);
+    };
+
+    const startX = width / 2;
+    const startY = height - 12;
+    const initialLength = height * 0.28;
+    const renderDepth = Math.min(Number(depth) || 8, 9);
+
+    drawBranch(startX, startY, initialLength, 0, renderDepth);
+  }, [angle, depth, branchRatio, colorTheme]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={240}
+      height={160}
+      className="w-full h-full object-contain p-2"
+    />
+  );
+}
 
 export default function StudentGallery({ onOpenFractalWithData }) {
   const [works, setWorks] = useState([]);
@@ -26,7 +92,46 @@ export default function StudentGallery({ onOpenFractalWithData }) {
   };
 
   useEffect(() => {
+    // 1. 최초 데이터 로드
     fetchWorks();
+
+    // 2. 동일 브라우저 내 프랙탈 저장/삭제 이벤트 즉각 수신 (모달 창에서 저장 즉시 반영)
+    const handleWorkSaved = () => {
+      fetchWorks();
+    };
+    const handleWorkDeleted = () => {
+      fetchWorks();
+    };
+
+    window.addEventListener('mathclay_work_saved', handleWorkSaved);
+    window.addEventListener('mathclay_work_deleted', handleWorkDeleted);
+
+    // 3. Supabase Realtime 채널 실시간 동기화 (다른 학생 기기나 창에서 등록/좋아요 시 자동 갱신)
+    let channel = null;
+    if (isSupabaseConfigured && supabase) {
+      try {
+        channel = supabase
+          .channel('realtime_fractal_gallery')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: TABLE_NAME },
+            () => {
+              fetchWorks();
+            }
+          )
+          .subscribe();
+      } catch (err) {
+        console.warn('Supabase realtime subscription failed:', err);
+      }
+    }
+
+    return () => {
+      window.removeEventListener('mathclay_work_saved', handleWorkSaved);
+      window.removeEventListener('mathclay_work_deleted', handleWorkDeleted);
+      if (channel && supabase) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
 
   // 고유 학생 목록 추출
@@ -143,15 +248,25 @@ export default function StudentGallery({ onOpenFractalWithData }) {
             </p>
           </div>
 
-          <button
-            onClick={fetchWorks}
-            disabled={loading}
-            className="clay-btn px-4 py-2 rounded-full text-xs font-bold text-clay-purple flex items-center gap-1.5 hover:scale-105 transition-all self-start sm:self-center flex-shrink-0"
-            title="최신 등록 작품 새로고침"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>새로고침</span>
-          </button>
+          <div className="flex items-center gap-2 self-start sm:self-center flex-shrink-0">
+            <button
+              onClick={() => onOpenFractalWithData && onOpenFractalWithData({ angle: 28, depth: 8, branchRatio: 0.72, colorTheme: 'summer' })}
+              className="clay-btn-primary px-4 py-2 rounded-full text-xs font-extrabold text-white flex items-center gap-1.5 hover:scale-105 transition-all shadow-sm"
+              title="프랙탈 시뮬레이터 열고 작품 만들기"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>작품 등록하기</span>
+            </button>
+            <button
+              onClick={fetchWorks}
+              disabled={loading}
+              className="clay-btn px-3.5 py-2 rounded-full text-xs font-bold text-clay-purple flex items-center gap-1.5 hover:scale-105 transition-all"
+              title="최신 등록 작품 새로고침"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              <span>새로고침</span>
+            </button>
+          </div>
         </div>
 
         {/* 필터 및 정렬 컨트롤러 바 */}
@@ -254,7 +369,12 @@ export default function StudentGallery({ onOpenFractalWithData }) {
                       className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="text-4xl text-clay-purple">🌱</div>
+                    <MiniFractalCanvas 
+                      angle={work.angle} 
+                      depth={work.depth} 
+                      branchRatio={work.branchRatio} 
+                      colorTheme={work.colorTheme} 
+                    />
                   )}
 
                   {/* 좌측 상단 학생 이름 뱃지 */}
@@ -359,15 +479,26 @@ export default function StudentGallery({ onOpenFractalWithData }) {
                 프랙탈 시뮬레이터에서 학생 이름과 함께 작품을 저장하면 이곳 전시관에 등록됩니다!
               </p>
             </div>
-            <button
-              onClick={() => {
-                setSelectedStudent('all');
-                setSearchQuery('');
-              }}
-              className="clay-btn-primary px-4 py-2 text-xs font-bold rounded-full"
-            >
-              전체 작품 보기
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-2.5 mt-2">
+              <button
+                onClick={() => onOpenFractalWithData && onOpenFractalWithData({ angle: 28, depth: 9, branchRatio: 0.72, colorTheme: 'summer' })}
+                className="clay-btn-primary px-5 py-2.5 text-xs font-extrabold rounded-full flex items-center gap-1.5 text-white shadow-md hover:scale-105 transition-all"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>지금 내 프랙탈 작품 만들기</span>
+              </button>
+              {(selectedStudent !== 'all' || searchQuery.trim()) && (
+                <button
+                  onClick={() => {
+                    setSelectedStudent('all');
+                    setSearchQuery('');
+                  }}
+                  className="clay-btn px-4 py-2.5 text-xs font-bold rounded-full text-clay-purple hover:scale-105 transition-all"
+                >
+                  전체 작품 보기
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>
