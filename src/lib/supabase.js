@@ -23,7 +23,7 @@ const TABLE_NAME = 'fractal_saves';
 const LOCAL_STORAGE_KEY = 'mathclay_saved_fractals';
 
 /**
- * 프랙탈 목록 불러오기 (Supabase 우선 ➔ 미설정 시 LocalStorage)
+ * 학생별 프랙탈 작품 목록 불러오기 (Supabase 우선 ➔ 미설정 시 LocalStorage)
  */
 export async function getFractals() {
   if (isSupabaseConfigured && supabase) {
@@ -32,12 +32,15 @@ export async function getFractals() {
         .from(TABLE_NAME)
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(100);
 
       if (!error && data) {
         return data.map((item) => ({
           id: item.id,
           title: item.title,
+          studentName: item.student_name || item.studentName || '익명 학생',
+          comment: item.comment || '',
+          likes: Number(item.likes || 0),
           angle: Number(item.angle),
           depth: Number(item.depth),
           branchRatio: Number(item.branch_ratio || item.branchRatio),
@@ -71,7 +74,7 @@ export async function getFractals() {
 }
 
 /**
- * 프랙탈 저장하기 (Supabase 우선 ➔ LocalStorage 백업 동시 저장)
+ * 학생 프랙탈 작품 저장하기 (Supabase 우선 ➔ LocalStorage 백업 동시 저장)
  */
 export async function saveFractalToDb(fractal) {
   let savedToSupabase = false;
@@ -81,6 +84,9 @@ export async function saveFractalToDb(fractal) {
       const payload = {
         id: fractal.id || 'fractal_' + Date.now(),
         title: fractal.title,
+        student_name: fractal.studentName || '익명 학생',
+        comment: fractal.comment || '',
+        likes: fractal.likes || 0,
         angle: fractal.angle,
         depth: fractal.depth,
         branch_ratio: fractal.branchRatio,
@@ -111,13 +117,44 @@ export async function saveFractalToDb(fractal) {
     const updated = [
       { ...fractal, source: savedToSupabase ? 'supabase' : 'local' },
       ...existing.filter((item) => item.id !== fractal.id),
-    ].slice(0, 20);
+    ].slice(0, 100);
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
   } catch (err) {
     console.warn('LocalStorage save warning:', err);
   }
 
   return { success: true, isCloud: savedToSupabase };
+}
+
+/**
+ * 작품 응원하기 (좋아요 증가)
+ */
+export async function likeFractalInDb(id) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data } = await supabase.from(TABLE_NAME).select('likes').eq('id', id).single();
+      const newLikes = (data?.likes || 0) + 1;
+      await supabase.from(TABLE_NAME).update({ likes: newLikes }).eq('id', id);
+    } catch (err) {
+      console.error('Supabase like error:', err);
+    }
+  }
+
+  // LocalStorage 동기화
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (raw) {
+      const existing = JSON.parse(raw);
+      const updated = existing.map((item) => 
+        item.id === id ? { ...item, likes: (item.likes || 0) + 1 } : item
+      );
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+    }
+  } catch (err) {
+    console.warn('LocalStorage like warning:', err);
+  }
+
+  return true;
 }
 
 /**

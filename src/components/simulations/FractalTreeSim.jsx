@@ -3,19 +3,34 @@ import { RotateCcw, Download, BookmarkPlus, Trash2, Sparkles, FolderHeart, Check
 import confetti from 'canvas-confetti';
 import { getFractals, saveFractalToDb, deleteFractalFromDb, isSupabaseConfigured } from '../../lib/supabase';
 
-export default function FractalTreeSim() {
+export default function FractalTreeSim({ initialData }) {
   const canvasRef = useRef(null);
-  const [angle, setAngle] = useState(28); // 분기 각도 (도)
-  const [depth, setDepth] = useState(9); // 재귀 깊이
-  const [branchRatio, setBranchRatio] = useState(0.72); // 가지 축소율
-  const [colorTheme, setColorTheme] = useState('summer'); // 'summer', 'sakura', 'autumn', 'frost'
+  const [angle, setAngle] = useState(initialData?.angle || 28); // 분기 각도 (도)
+  const [depth, setDepth] = useState(initialData?.depth || 9); // 재귀 깊이
+  const [branchRatio, setBranchRatio] = useState(initialData?.branchRatio || 0.72); // 가지 축소율
+  const [colorTheme, setColorTheme] = useState(initialData?.colorTheme || 'summer'); // 'summer', 'sakura', 'autumn', 'frost'
   
   // 저장 관련 상태
-  const [workTitle, setWorkTitle] = useState('');
+  const [studentName, setStudentName] = useState(initialData?.studentName || '');
+  const [workTitle, setWorkTitle] = useState(initialData?.title || '');
+  const [comment, setComment] = useState(initialData?.comment || '');
   const [savedList, setSavedList] = useState([]);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // initialData 변경 시 자동 로드
+  useEffect(() => {
+    if (initialData) {
+      if (initialData.angle) setAngle(initialData.angle);
+      if (initialData.depth) setDepth(initialData.depth);
+      if (initialData.branchRatio) setBranchRatio(initialData.branchRatio);
+      if (initialData.colorTheme) setColorTheme(initialData.colorTheme);
+      if (initialData.title) setWorkTitle(initialData.title);
+      if (initialData.studentName) setStudentName(initialData.studentName);
+      if (initialData.comment) setComment(initialData.comment);
+    }
+  }, [initialData]);
 
   // 테마별 색상 팔레트
   const colorThemes = {
@@ -111,16 +126,20 @@ export default function FractalTreeSim() {
 
   // 3. 작품 저장하기 (Supabase 클라우드 & LocalStorage 백업)
   const handleSaveToGallery = async () => {
-    const defaultName = `프랙탈 트리 (${angle}°, ${depth}단)`;
+    const finalStudentName = studentName.trim() || '익명 학생';
+    const defaultName = `${studentName.trim() ? studentName.trim() + '의 ' : ''}프랙탈 트리 (${angle}°, ${depth}단)`;
     const title = workTitle.trim() || defaultName;
 
     const canvas = canvasRef.current;
-    const thumbnail = canvas ? canvas.toDataURL('image/jpeg', 0.6) : null;
+    const thumbnail = canvas ? canvas.toDataURL('image/jpeg', 0.5) : null;
 
     setIsSaving(true);
     const newItem = {
       id: 'fractal_' + Date.now(),
       title,
+      studentName: finalStudentName,
+      comment: comment.trim(),
+      likes: 0,
       angle,
       depth,
       branchRatio,
@@ -136,18 +155,19 @@ export default function FractalTreeSim() {
 
     try {
       const res = await saveFractalToDb(newItem);
-      const updated = [newItem, ...savedList.filter((item) => item.id !== newItem.id)].slice(0, 20);
+      const updated = [newItem, ...savedList.filter((item) => item.id !== newItem.id)].slice(0, 50);
       setSavedList(updated);
       setWorkTitle('');
+      setComment('');
 
       if (res.isCloud) {
-        setSaveSuccessMsg(`⚡ Supabase 클라우드 DB에 "${title}" 저장이 완료되었습니다!`);
+        setSaveSuccessMsg(`⚡ [${finalStudentName}] 학생의 작품이 Supabase 클라우드 및 학생 갤러리에 저장되었습니다!`);
       } else {
-        setSaveSuccessMsg(`💾 "${title}" 저장이 완료되었습니다!`);
+        setSaveSuccessMsg(`💾 [${finalStudentName}] 학생의 작품이 저장되었습니다!`);
       }
     } catch (err) {
       console.error('Error in save to gallery:', err);
-      setSaveSuccessMsg(`"${title}" 로컬 저장이 완료되었습니다.`);
+      setSaveSuccessMsg(`"${title}" 저장이 완료되었습니다.`);
     } finally {
       setIsSaving(false);
       setTimeout(() => setSaveSuccessMsg(null), 3500);
@@ -301,48 +321,85 @@ export default function FractalTreeSim() {
         </div>
       </div>
 
-      {/* 작품 저장 폼 (Save Card) */}
-      <div className="clay-card p-4 bg-gradient-to-r from-purple-50/70 to-teal-50/70 flex flex-col sm:flex-row items-center justify-between gap-3 border border-purple-100">
-        <div className="flex items-center gap-2.5 w-full sm:w-auto flex-1">
-          <div className="w-8 h-8 rounded-full bg-purple-100 text-clay-purple flex items-center justify-center flex-shrink-0 shadow-sm">
-            <BookmarkPlus className="w-4 h-4" />
+      {/* 작품 저장 폼 (Save Card with Student Info) */}
+      <div className="clay-card p-4 sm:p-5 bg-gradient-to-r from-purple-50/80 via-teal-50/60 to-rose-50/60 flex flex-col gap-3 border border-purple-100">
+        <div className="flex items-center justify-between pb-1 border-b border-purple-100/60">
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-clay-purple text-white flex items-center justify-center text-xs font-bold shadow-sm">
+              ✍️
+            </span>
+            <span className="text-xs font-extrabold text-clay-slate-800">
+              학생 작품 전시관에 등록하기
+            </span>
           </div>
-          <input
-            type="text"
-            placeholder="프랙탈 작품 이름을 입력하세요 (예: 눈꽃 나무)"
-            value={workTitle}
-            onChange={(e) => setWorkTitle(e.target.value)}
-            className="clay-input flex-1 px-4 py-2 text-xs font-bold text-clay-slate-700 bg-white"
-          />
+          <span className="text-[10px] font-bold text-clay-slate-400">
+            {isSupabaseConfigured ? '⚡ Supabase 클라우드 공유' : '💾 로컬 보관함 저장'}
+          </span>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <button
-            onClick={() => { setAngle(28); setDepth(9); setBranchRatio(0.72); }}
-            className="clay-btn px-3 py-2 rounded-full text-xs font-bold text-clay-slate-600 flex items-center gap-1"
-            title="기본값 복원"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>기본값</span>
-          </button>
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+          {/* 학생 이름 / 학번 */}
+          <div className="sm:col-span-4">
+            <input
+              type="text"
+              placeholder="학생 이름/학번 (예: 2반 김수학)"
+              value={studentName}
+              onChange={(e) => setStudentName(e.target.value)}
+              className="clay-input w-full px-3.5 py-2 text-xs font-bold text-clay-slate-700 bg-white"
+            />
+          </div>
 
-          <button
-            onClick={handleSaveToGallery}
-            disabled={isSaving}
-            className="clay-btn-primary px-4 py-2 rounded-full text-xs font-extrabold flex items-center gap-1.5 shadow-sm whitespace-nowrap disabled:opacity-60"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>저장 중...</span>
-              </>
-            ) : (
-              <>
-                <BookmarkPlus className="w-3.5 h-3.5" />
-                <span>{isSupabaseConfigured ? 'Supabase에 저장' : '내 보관함에 저장'}</span>
-              </>
-            )}
-          </button>
+          {/* 작품 제목 */}
+          <div className="sm:col-span-8">
+            <input
+              type="text"
+              placeholder="작품 제목 (예: 황금비 단풍나무)"
+              value={workTitle}
+              onChange={(e) => setWorkTitle(e.target.value)}
+              className="clay-input w-full px-3.5 py-2 text-xs font-bold text-clay-slate-700 bg-white"
+            />
+          </div>
+
+          {/* 탐구 소감 (선택) */}
+          <div className="sm:col-span-8">
+            <input
+              type="text"
+              placeholder="수학 탐구 소감 (예: 각도 28도와 9단계에서 완벽한 자연 나무 비율 완성)"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="clay-input w-full px-3.5 py-2 text-xs font-medium text-clay-slate-700 bg-white"
+            />
+          </div>
+
+          {/* 버튼 액션 */}
+          <div className="sm:col-span-4 flex items-center gap-2 justify-end">
+            <button
+              onClick={() => { setAngle(28); setDepth(9); setBranchRatio(0.72); }}
+              className="clay-btn px-3 py-2 rounded-full text-xs font-bold text-clay-slate-600 flex items-center gap-1"
+              title="기본값 복원"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>초기화</span>
+            </button>
+
+            <button
+              onClick={handleSaveToGallery}
+              disabled={isSaving}
+              className="clay-btn-primary px-4 py-2 rounded-full text-xs font-extrabold flex items-center gap-1.5 shadow-sm whitespace-nowrap disabled:opacity-60 flex-1 sm:flex-initial justify-center"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>저장 중...</span>
+                </>
+              ) : (
+                <>
+                  <BookmarkPlus className="w-3.5 h-3.5" />
+                  <span>작품 등록</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import HeroSection from './components/HeroSection';
 import CategoryFilter from './components/CategoryFilter';
 import SimulationCard from './components/SimulationCard';
 import SimulationModal from './components/SimulationModal';
+import StudentGallery from './components/StudentGallery';
 import Footer from './components/Footer';
 import { SIMULATIONS } from './data/simulationsData';
 import { SearchX, Sparkles } from 'lucide-react';
@@ -50,6 +51,25 @@ export default function App() {
     const el = document.getElementById('simulation-grid-section');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // 학생 갤러리에서 선택한 작품으로 프랙탈 시뮬레이터 열기
+  const handleOpenFractalWithData = (work) => {
+    const sim = SIMULATIONS.find((s) => s.id === 'fractal-tree');
+    if (sim) {
+      setActiveSimulation({
+        ...sim,
+        initialData: {
+          angle: work.angle,
+          depth: work.depth,
+          branchRatio: work.branchRatio,
+          colorTheme: work.colorTheme,
+          title: work.title,
+          studentName: work.studentName,
+          comment: work.comment,
+        },
+      });
     }
   };
 
@@ -182,6 +202,9 @@ export default function App() {
             )}
           </div>
         </section>
+
+        {/* 3. 학생별 프랙탈 작품 모음방 (Student Gallery) */}
+        <StudentGallery onOpenFractalWithData={handleOpenFractalWithData} />
       </main>
 
       {/* 3. 모달 (시뮬레이션 실행창) */}

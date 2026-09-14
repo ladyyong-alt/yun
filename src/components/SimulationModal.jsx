@@ -83,7 +83,7 @@ export default function SimulationModal({ sim, onClose }) {
           {sim.interactiveType === 'conic-sections' && <ConicSectionSim />}
           {sim.interactiveType === 'unit-circle' && <UnitCircleSim isCompact={false} />}
           {sim.interactiveType === 'monte-carlo' && <MonteCarloSim />}
-          {sim.interactiveType === 'fractal-tree' && <FractalTreeSim />}
+          {sim.interactiveType === 'fractal-tree' && <FractalTreeSim initialData={sim.initialData} />}
           {sim.interactiveType === 'galton-board' && <GaltonBoardSim />}
           {!['geogebra-lab', 'calculus-derivative', 'riemann-sum', 'conic-sections', 'unit-circle', 'monte-carlo', 'fractal-tree', 'galton-board'].includes(sim.interactiveType) && (
             <div className="clay-inset p-8 text-center rounded-2xl flex flex-col items-center justify-center gap-4 bg-slate-50">

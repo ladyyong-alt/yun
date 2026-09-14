@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Search, Compass, BookOpen, FlaskConical, Users, Menu, X, PlusCircle, ArrowRight } from 'lucide-react';
+import { Sparkles, Search, Compass, BookOpen, FlaskConical, Users, Menu, X, PlusCircle, ArrowRight, FolderHeart } from 'lucide-react';
 
 export default function Navbar({ onSearchChange, searchQuery, onCategorySelect, activeCategory, onOpenHighSchoolLab }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -7,9 +7,10 @@ export default function Navbar({ onSearchChange, searchQuery, onCategorySelect, 
 
   const navLinks = [
     { id: 'explore', label: '시뮬레이션 탐색', icon: Compass },
+    { id: 'gallery', label: '학생 작품방 🎨', icon: FolderHeart },
     { id: 'curriculum', label: '교과과정 코스', icon: BookOpen },
-    { id: 'lab', label: '인터랙티브 랩', icon: FlaskConical },
-    { id: 'community', label: '교사·학생 커뮤니티', icon: Users },
+    { id: 'lab', label: '고교 수학 랩', icon: FlaskConical },
+    { id: 'community', label: '커뮤니티', icon: Users },
   ];
 
   return (
@@ -54,7 +55,10 @@ export default function Navbar({ onSearchChange, searchQuery, onCategorySelect, 
                 key={link.id}
                 onClick={() => {
                   setActiveTab(link.id);
-                  if (link.id === 'curriculum') {
+                  if (link.id === 'gallery') {
+                    const el = document.getElementById('student-gallery-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  } else if (link.id === 'curriculum') {
                     onCategorySelect('high-school');
                     const el = document.getElementById('simulation-grid-section');
                     if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -149,6 +153,20 @@ export default function Navbar({ onSearchChange, searchQuery, onCategorySelect, 
                   onClick={() => {
                     setActiveTab(link.id);
                     setMobileMenuOpen(false);
+                    if (link.id === 'gallery') {
+                      const el = document.getElementById('student-gallery-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    } else if (link.id === 'curriculum') {
+                      onCategorySelect('high-school');
+                      const el = document.getElementById('simulation-grid-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    } else if (link.id === 'lab') {
+                      if (onOpenHighSchoolLab) onOpenHighSchoolLab();
+                    } else if (link.id === 'explore') {
+                      onCategorySelect('all');
+                      const el = document.getElementById('simulation-grid-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }
                   }}
                   className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-left transition-all ${
                     isActive ? 'clay-btn-primary text-white' : 'hover:bg-slate-100 text-clay-slate-700'
