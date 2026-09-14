@@ -5,6 +5,7 @@ import CategoryFilter from './components/CategoryFilter';
 import SimulationCard from './components/SimulationCard';
 import SimulationModal from './components/SimulationModal';
 import StudentGallery from './components/StudentGallery';
+import MathChatbot from './components/MathChatbot';
 import Footer from './components/Footer';
 import { SIMULATIONS } from './data/simulationsData';
 import { SearchX, Sparkles } from 'lucide-react';
@@ -14,6 +15,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('popular');
   const [activeSimulation, setActiveSimulation] = useState(null);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   // 필터링 및 정렬 처리
   const filteredSimulations = useMemo(() => {
@@ -85,6 +87,7 @@ export default function App() {
           const sim = SIMULATIONS.find((s) => s.id === 'geogebra-lab');
           if (sim) setActiveSimulation(sim);
         }}
+        onOpenChatbot={() => setIsChatbotOpen(true)}
       />
 
       {/* 2. 메인 페이지 본문 */}
@@ -217,6 +220,13 @@ export default function App() {
 
       {/* 4. 푸터 (Footer) */}
       <Footer />
+
+      {/* 5. 클레이 AI 수학 튜터 챗봇 (Floating Math AI Tutor) */}
+      <MathChatbot
+        isOpen={isChatbotOpen}
+        onToggle={() => setIsChatbotOpen((prev) => !prev)}
+        onClose={() => setIsChatbotOpen(false)}
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Sparkles, Search, Compass, BookOpen, FlaskConical, Users, Menu, X, PlusCircle, ArrowRight, FolderHeart } from 'lucide-react';
+import { Sparkles, Search, Compass, BookOpen, FlaskConical, Users, Menu, X, PlusCircle, ArrowRight, FolderHeart, Bot } from 'lucide-react';
 
-export default function Navbar({ onSearchChange, searchQuery, onCategorySelect, activeCategory, onOpenHighSchoolLab }) {
+export default function Navbar({ onSearchChange, searchQuery, onCategorySelect, activeCategory, onOpenHighSchoolLab, onOpenChatbot }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('explore');
 
@@ -99,20 +99,24 @@ export default function Navbar({ onSearchChange, searchQuery, onCategorySelect, 
             />
           </div>
 
-          {/* New Simulation Submit Button */}
+          {/* AI Math Tutor Button */}
           <button 
-            onClick={() => alert('시뮬레이션 제작/등록 기능은 준비 중입니다! Vercel 배포 후 새로운 시뮬레이터를 추가할 수 있습니다.')}
-            className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold text-clay-purple hover:text-clay-purple-dark bg-white shadow-clay-btn hover:-translate-y-0.5 active:translate-y-0.5 transition-all"
-            title="새 수학 시뮬레이션 제안"
+            onClick={onOpenChatbot}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-extrabold text-white bg-gradient-to-r from-clay-purple via-indigo-600 to-teal-600 shadow-sm hover:scale-105 active:scale-95 transition-all"
+            title="AI 수학 튜터에게 질문하기"
           >
-            <PlusCircle className="w-4 h-4 text-clay-purple" />
-            <span>등록하기</span>
+            <Bot className="w-4 h-4 text-white" />
+            <span className="hidden sm:inline">AI 수학 튜터</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           </button>
 
           {/* Primary Action Button (Sign in / Get Started) */}
           <button 
-            onClick={() => alert('MathClay는 회원가입 없이 모든 수학 시뮬레이션을 즉시 무료로 체험할 수 있습니다!')}
-            className="clay-btn-primary px-4 sm:px-5 py-2 text-xs font-bold flex items-center gap-1.5 shadow-clay-primary"
+            onClick={() => {
+              const el = document.getElementById('simulation-grid-section');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="clay-btn-primary px-3.5 sm:px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-clay-primary"
           >
             <span>체험 시작</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -177,6 +181,17 @@ export default function Navbar({ onSearchChange, searchQuery, onCategorySelect, 
                 </button>
               );
             })}
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                if (onOpenChatbot) onOpenChatbot();
+              }}
+              className="flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-sm font-extrabold text-white bg-gradient-to-r from-clay-purple via-indigo-600 to-teal-600 shadow-md"
+            >
+              <Bot className="w-4 h-4" />
+              <span>AI 수학 튜터에게 질문하기</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            </button>
           </div>
 
           <div className="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between text-xs text-clay-slate-500 font-medium">
